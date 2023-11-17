@@ -1,4 +1,6 @@
 import os
+import re
+import datetime
 from kubernetes import client, config
 
 namespace = os.getenv("NAMESPACE")
@@ -10,17 +12,13 @@ def get_deployments_with_creation_time():
     api_instance = client.AppsV1Api()
     deployment_list = api_instance.list_namespaced_deployment(namespace=namespace)
 
-    deployments_info = {}
-
     for deployment in deployment_list.items:
-        # Extracting deployment name
         deployment_name = deployment.metadata.name
-
-        # Extracting creation timestamp
         creation_time = deployment.metadata.creation_timestamp
 
-        # Storing in the dictionary
-        deployments_info[deployment_name] = creation_time
+        now = datetime.datetime.now(datetime.timezone.utc)
+        x = re.search("^deployment-.*$", deployment_name)
+        print(now - creation_time)
 
     return deployments_info
 
