@@ -1,0 +1,20 @@
+apiVersion: batch/v1
+kind: CronJob
+metadata:
+  name: older-deleter
+spec:
+  schedule: "1 * * * *"
+  jobTemplate:
+    spec:
+      template:
+        spec:
+          containers:
+          - name: older-deleter-cronjob
+            image: scr4pp/kubernetes_cronjob
+            env:
+              - name: NAMESPACE
+                value: cjarcau
+              - name: OLDER_THEN
+                value: "10"
+            command: ["python3", "main.py"]
+          restartPolicy: OnFailure
