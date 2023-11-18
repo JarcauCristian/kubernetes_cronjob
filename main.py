@@ -71,15 +71,15 @@ def delete():
     ingress_list = networking_v1_api.list_namespaced_ingress(namespace=namespace)
 
     for ingress in ingress_list.items:
-        secret_name = ingress.metadata.name
+        ingress_name = ingress.metadata.name
         creation_time = ingress.metadata.creation_timestamp
 
         now = datetime.datetime.now(datetime.timezone.utc)
-        x = re.search("^secret-.*$", secret_name)
+        x = re.search("^ingress-.*$", secret_name)
 
         if x and (now - creation_time) > datetime.timedelta(days=older_then):
             api_response = networking_v1_api.delete_namespaced_ingress(
-                name=secret_name,
+                name=ingress_name,
                 namespace=namespace,
                 body=client.V1DeleteOptions()
             )
