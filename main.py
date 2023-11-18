@@ -11,6 +11,7 @@ def delete():
     config.load_incluster_config()
     api_instance = client.AppsV1Api()
     core_v1_api = client.CoreV1Api()
+    networking_v1_api = client.NetworkingV1Api()
     deployment_list = api_instance.list_namespaced_deployment(namespace=namespace)
 
     for deployment in deployment_list.items:
@@ -60,6 +61,24 @@ def delete():
 
         if x and (now - creation_time) > datetime.timedelta(days=older_then):
             api_response = core_v1_api.delete_namespaced_service(
+                name=secret_name,
+                namespace=namespace,
+                body=client.V1DeleteOptions()
+            )
+
+            print(f"Status: {api_response.status}")
+    
+    ingress_list = networking_v1_api.list_namespaced_ingress(namespace=namespace)
+
+    for ingress in ingress_list.items:
+        secret_name = ingress.metadata.name
+        creation_time = ingress.metadata.creation_timestamp
+
+        now = datetime.datetime.now(datetime.timezone.utc)
+        x = re.search("^secret-.*$", secret_name)
+
+        if x and (now - creation_time) > datetime.timedelta(days=older_then):
+            api_response = networking_v1_api.delete_namespaced_ingress(
                 name=secret_name,
                 namespace=namespace,
                 body=client.V1DeleteOptions()
