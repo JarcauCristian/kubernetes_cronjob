@@ -47,15 +47,14 @@ def delete():
         now = datetime.datetime.now(datetime.timezone.utc)
         x = re.search("^ingress-.*$", ingress_name)
 
-        if x and (now - creation_time) > datetime.timedelta(days=older_then):
-            if ingress_name[8:] in notebook_ids:
-                api_response = networking_v1_api.delete_namespaced_ingress(
-                    name=ingress_name,
-                    namespace=namespace,
-                    body=client.V1DeleteOptions()
-                )
+        if (x and (now - creation_time) > datetime.timedelta(days=older_then)) or (ingress_name[8:] in notebook_ids and x):
+            api_response = networking_v1_api.delete_namespaced_ingress(
+                name=ingress_name,
+                namespace=namespace,
+                body=client.V1DeleteOptions()
+            )
 
-                print(f"Status: {api_response.status}")
+            print(f"Status: {api_response.status}")
 
     service_list = core_v1_api.list_namespaced_service(namespace=namespace)
 
@@ -66,15 +65,14 @@ def delete():
         now = datetime.datetime.now(datetime.timezone.utc)
         x = re.search("^service-.*$", service_name)
 
-        if x and (now - creation_time) > datetime.timedelta(days=older_then):
-            if service_name[8:] in notebook_ids:
-                api_response = core_v1_api.delete_namespaced_service(
-                    name=service_name,
-                    namespace=namespace,
-                    body=client.V1DeleteOptions()
-                )
+        if (x and (now - creation_time) > datetime.timedelta(days=older_then)) or (service_name[8:] in notebook_ids and x):
+            api_response = core_v1_api.delete_namespaced_service(
+                name=service_name,
+                namespace=namespace,
+                body=client.V1DeleteOptions()
+            )
 
-                print(f"Status: {api_response.status}")
+            print(f"Status: {api_response.status}")
 
     deployment_list = api_instance.list_namespaced_deployment(namespace=namespace)
 
@@ -85,17 +83,16 @@ def delete():
         now = datetime.datetime.now(datetime.timezone.utc)
         x = re.search("^deployment-.*$", deployment_name)
 
-        if x and (now - creation_time) > datetime.timedelta(days=older_then):
-            if deployment_name[11:] in notebook_ids:
-                api_response = api_instance.delete_namespaced_deployment(
-                    name=deployment_name,
-                    namespace=namespace,
-                    body=client.V1DeleteOptions(
-                        propagation_policy='Foreground',
-                    )
+        if (x and (now - creation_time) > datetime.timedelta(days=older_then)) or (deployment_name[11:] in notebook_ids and x):
+            api_response = api_instance.delete_namespaced_deployment(
+                name=deployment_name,
+                namespace=namespace,
+                body=client.V1DeleteOptions(
+                    propagation_policy='Foreground',
                 )
+            )
 
-                print(f"Status: {api_response.status}")
+            print(f"Status: {api_response.status}")
 
     secret_list = core_v1_api.list_namespaced_secret(namespace=namespace)
 
@@ -106,15 +103,14 @@ def delete():
         now = datetime.datetime.now(datetime.timezone.utc)
         x = re.search("^secret-.*$", secret_name)
 
-        if x and (now - creation_time) > datetime.timedelta(days=older_then):
-            if secret_name[7:] in notebook_ids:
-                api_response = core_v1_api.delete_namespaced_service(
-                    name=secret_name,
-                    namespace=namespace,
-                    body=client.V1DeleteOptions()
-                )
+        if (x and (now - creation_time) > datetime.timedelta(days=older_then)) or (secret_name[7:] in notebook_ids and x):
+            api_response = core_v1_api.delete_namespaced_service(
+                name=secret_name,
+                namespace=namespace,
+                body=client.V1DeleteOptions()
+            )
 
-                print(f"Status: {api_response.status}")
+            print(f"Status: {api_response.status}")
 
     session.close()
 
