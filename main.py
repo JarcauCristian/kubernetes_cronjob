@@ -21,6 +21,7 @@ class MyTable(Base):
     user_id = Column(String)
     last_accessed = Column(DateTime)
     created_at = Column(DateTime)
+    description = Column(String)
 
 
 def delete():
