@@ -3,7 +3,7 @@ import re
 import datetime
 from kubernetes import client, config
 from sqlalchemy.orm import declarative_base, sessionmaker
-from sqlalchemy import create_engine, Column, String, DateTime
+from sqlalchemy import create_engine, Column, String, DateTime, Integer
 
 Base = declarative_base()
 namespace = os.getenv("NAMESPACE")
@@ -22,13 +22,13 @@ class MyTable(Base):
     last_accessed = Column(DateTime)
     created_at = Column(DateTime)
     description = Column(String)
+    port = Column(Integer)
 
 
 def delete():
     config.load_incluster_config()
     api_instance = client.AppsV1Api()
     core_v1_api = client.CoreV1Api()
-    networking_v1_api = client.NetworkingV1Api()
 
     session = Session()
 
@@ -37,24 +37,6 @@ def delete():
     results = session.query(MyTable).filter(MyTable.last_accessed < ten_days_ago).all()
 
     notebook_ids = [result.notebook_id for result in results]
-
-    ingress_list = networking_v1_api.list_namespaced_ingress(namespace=namespace)
-
-    for ingress in ingress_list.items:
-        ingress_name = ingress.metadata.name
-        creation_time = ingress.metadata.creation_timestamp
-
-        now = datetime.datetime.now(datetime.timezone.utc)
-        x = re.search("^ingress-.*$", ingress_name)
-
-        if (x and (now - creation_time) > datetime.timedelta(days=older_then)) or (ingress_name[8:] in notebook_ids and x):
-            api_response = networking_v1_api.delete_namespaced_ingress(
-                name=ingress_name,
-                namespace=namespace,
-                body=client.V1DeleteOptions()
-            )
-
-            print(f"Status: {api_response.status}")
 
     service_list = core_v1_api.list_namespaced_service(namespace=namespace)
 
