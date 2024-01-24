@@ -2,6 +2,7 @@ apiVersion: batch/v1
 kind: CronJob
 metadata:
   name: older-deleter
+  namespace: cjarcau
 spec:
   schedule: "1 * * * *"
   jobTemplate:
@@ -15,6 +16,16 @@ spec:
               - name: NAMESPACE
                 value: cjarcau
               - name: OLDER_THEN
-                value: "10"
+                value: "20"
+              - name: POSTGRES_USER
+                value: postgres
+              - name: POSTGRES_PASS
+                value: password
+              - name: POSTGRES_HOST
+                value: postgres
+              - name: POSTGRES_PORT
+                value: "32102"
+              - name: POSTGRES_DB
+                value: postgres
             command: ["python3", "main.py"]
           restartPolicy: OnFailure

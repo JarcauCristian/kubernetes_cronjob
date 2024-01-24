@@ -47,7 +47,8 @@ def delete():
         now = datetime.datetime.now(datetime.timezone.utc)
         x = re.search("^service-.*$", service_name)
 
-        if (x and (now - creation_time) > datetime.timedelta(days=older_then)) or (service_name[8:] in notebook_ids and x):
+        if ((x and (now - creation_time) > datetime.timedelta(days=older_then)) or
+                (service_name[8:] in notebook_ids and x)):
             api_response = core_v1_api.delete_namespaced_service(
                 name=service_name,
                 namespace=namespace,
@@ -65,7 +66,8 @@ def delete():
         now = datetime.datetime.now(datetime.timezone.utc)
         x = re.search("^deployment-.*$", deployment_name)
 
-        if (x and (now - creation_time) > datetime.timedelta(days=older_then)) or (deployment_name[11:] in notebook_ids and x):
+        if ((x and (now - creation_time) > datetime.timedelta(days=older_then)) or
+                (deployment_name[11:] in notebook_ids and x)):
             api_response = api_instance.delete_namespaced_deployment(
                 name=deployment_name,
                 namespace=namespace,
@@ -85,7 +87,8 @@ def delete():
         now = datetime.datetime.now(datetime.timezone.utc)
         x = re.search("^secret-.*$", secret_name)
 
-        if (x and (now - creation_time) > datetime.timedelta(days=older_then)) or (secret_name[7:] in notebook_ids and x):
+        if ((x and (now - creation_time) > datetime.timedelta(days=older_then)) or
+                (secret_name[7:] in notebook_ids and x)):
             api_response = core_v1_api.delete_namespaced_service(
                 name=secret_name,
                 namespace=namespace,
