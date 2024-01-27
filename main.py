@@ -7,10 +7,12 @@ from sqlalchemy import create_engine, Column, String, DateTime, Integer
 
 Base = declarative_base()
 namespace = os.getenv("NAMESPACE")
-older_then = float(os.getenv("OLDER_THEN"))
+older_then = int(os.getenv("OLDER_THEN"))
+
+password = os.getenv("POSTGRES_PASSWORD").strip().replace("\n", "")
 
 engine = create_engine(f'postgresql+psycopg2://'
-                       f'{os.getenv("POSTGRES_USER")}:{os.getenv("POSTGRES_PASSWORD")}@{os.getenv("POSTGRES_HOST")}'
+                       f'{os.getenv("POSTGRES_USER")}:{password}@{os.getenv("POSTGRES_HOST")}'
                        f':{os.getenv("POSTGRES_PORT")}/{os.getenv("POSTGRES_DB")}')
 Session = sessionmaker(bind=engine)
 
@@ -23,6 +25,7 @@ class MyTable(Base):
     created_at = Column(DateTime)
     description = Column(String)
     port = Column(Integer)
+    notebook_type = Column(String)
 
 
 def delete():
