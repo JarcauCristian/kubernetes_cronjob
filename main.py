@@ -1,5 +1,6 @@
 import os
 import re
+import logging
 import datetime
 from kubernetes import client, config
 from sqlalchemy.orm import declarative_base, sessionmaker
@@ -32,6 +33,7 @@ def delete():
     config.load_incluster_config()
     api_instance = client.AppsV1Api()
     core_v1_api = client.CoreV1Api()
+    networking_v1_api = client.NetworkingV1Api()
 
     session = Session()
 
@@ -40,6 +42,28 @@ def delete():
     results = session.query(MyTable).filter(MyTable.last_accessed < ten_days_ago).all()
 
     notebook_ids = [result.notebook_id for result in results]
+
+    ingress_list = networking_v1_api.list_namespaced_ingress(namespace=namespace)
+
+    for ingress in ingress_list.items:
+        ingress_name = ingress.metadata.name
+        creation_time = ingress.metadata.creation_timestamp
+
+        now = datetime.datetime.now(datetime.timezone.utc)
+        x = re.search("^ingress-.*$", ingress_name)
+
+        if x and (now - creation_time) > datetime.timedelta(days=older_then):
+            if ingress_name[8:] in notebook_ids:
+                try:
+                    api_response = networking_v1_api.delete_namespaced_ingress(
+                        name=ingress_name,
+                        namespace=namespace,
+                        body=client.V1DeleteOptions()
+                    )
+                    logging.info(f"Status: {api_response.status}")
+                except client.exceptions.ApiException as e:
+                    logging.error(f"Error: {e} deleting ingress!")
+                
 
     service_list = core_v1_api.list_namespaced_service(namespace=namespace)
 
@@ -52,13 +76,16 @@ def delete():
 
         if ((x and (now - creation_time) > datetime.timedelta(days=older_then)) or
                 (service_name[8:] in notebook_ids and x)):
-            api_response = core_v1_api.delete_namespaced_service(
-                name=service_name,
-                namespace=namespace,
-                body=client.V1DeleteOptions()
-            )
+            try:
+                api_response = core_v1_api.delete_namespaced_service(
+                    name=service_name,
+                    namespace=namespace,
+                    body=client.V1DeleteOptions()
+                )
 
-            print(f"Status: {api_response.status}")
+                logging.info(f"Status: {api_response.status}")
+            except client.exceptions.ApiException as e:
+                logging.error(f"Error: {e} deleting service!")
 
     deployment_list = api_instance.list_namespaced_deployment(namespace=namespace)
 
@@ -71,15 +98,18 @@ def delete():
 
         if ((x and (now - creation_time) > datetime.timedelta(days=older_then)) or
                 (deployment_name[11:] in notebook_ids and x)):
-            api_response = api_instance.delete_namespaced_deployment(
-                name=deployment_name,
-                namespace=namespace,
-                body=client.V1DeleteOptions(
-                    propagation_policy='Foreground',
+            try:
+                api_response = api_instance.delete_namespaced_deployment(
+                    name=deployment_name,
+                    namespace=namespace,
+                    body=client.V1DeleteOptions(
+                        propagation_policy='Foreground',
+                    )
                 )
-            )
 
-            print(f"Status: {api_response.status}")
+                logging.info(f"Status: {api_response.status}")
+            except client.exceptions.ApiException as e:
+                logging.error(f"Error: {e} deleting deployment!")
 
     secret_list = core_v1_api.list_namespaced_secret(namespace=namespace)
 
@@ -92,13 +122,16 @@ def delete():
 
         if ((x and (now - creation_time) > datetime.timedelta(days=older_then)) or
                 (secret_name[7:] in notebook_ids and x)):
-            api_response = core_v1_api.delete_namespaced_service(
-                name=secret_name,
-                namespace=namespace,
-                body=client.V1DeleteOptions()
-            )
+            try:
+                api_response = core_v1_api.delete_namespaced_service(
+                    name=secret_name,
+                    namespace=namespace,
+                    body=client.V1DeleteOptions()
+                )
 
-            print(f"Status: {api_response.status}")
+                logging.info(f"Status: {api_response.status}")
+            except client.exceptions.ApiException as e:
+                logging.error(f"Error: {e} deleting secret!")
 
     session.close()
 
