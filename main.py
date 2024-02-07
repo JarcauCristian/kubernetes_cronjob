@@ -7,10 +7,10 @@ from sqlalchemy.orm import declarative_base, sessionmaker
 from sqlalchemy import create_engine, Column, String, DateTime, Integer
 
 Base = declarative_base()
-namespace = os.getenv("NAMESPACE")
-older_then = int(os.getenv("OLDER_THEN"))
+namespace = os.getenv("NAMESPACE") # The namespace in which to delete deployments, ingresses, secrets, services
+older_then = int(os.getenv("OLDER_THEN")) # Older then some time
 
-password = os.getenv("POSTGRES_PASSWORD").strip().replace("\n", "")
+password = os.getenv("POSTGRES_PASSWORD").strip().replace("\n", "") # Postgres DB Password
 
 engine = create_engine(f'postgresql+psycopg2://'
                        f'{os.getenv("POSTGRES_USER")}:{password}@{os.getenv("POSTGRES_HOST")}'
@@ -18,6 +18,7 @@ engine = create_engine(f'postgresql+psycopg2://'
 Session = sessionmaker(bind=engine)
 
 
+# The table that is represented in Postgres
 class MyTable(Base):
     __tablename__ = "notebooks"
     notebook_id = Column(String, primary_key=True)
@@ -29,6 +30,7 @@ class MyTable(Base):
     notebook_type = Column(String)
 
 
+# The function that gets all the ids from the database and looks for each if the creation time is before older then, and if yes than delete everything
 def delete():
     config.load_incluster_config()
     api_instance = client.AppsV1Api()
