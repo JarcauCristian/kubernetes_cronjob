@@ -27,7 +27,10 @@ class MyTable(Base):
     created_at = Column(DateTime)
     description = Column(String)
     port = Column(Integer)
+    dataset_name = Column(String)
+    dataset_user = Column(String)
     notebook_type = Column(String)
+
 
 
 # The function that gets all the ids from the database and looks for each if the creation time is before older then, and if yes than delete everything
@@ -44,7 +47,7 @@ def delete():
     results = session.query(MyTable).filter(MyTable.last_accessed < ten_days_ago).all()
 
     notebook_ids = [result.notebook_id for result in results]
-
+    
     ingress_list = networking_v1_api.list_namespaced_ingress(namespace=namespace)
 
     for ingress in ingress_list.items:
@@ -54,8 +57,7 @@ def delete():
         now = datetime.datetime.now(datetime.timezone.utc)
         x = re.search("^ingress-.*$", ingress_name)
 
-        if x and (now - creation_time) > datetime.timedelta(days=older_then):
-            if ingress_name[8:] in notebook_ids:
+        if (x and (now - creation_time) > datetime.timedelta(days=older_then)) or (ingress_name[8:] in notebook_ids and x):
                 try:
                     api_response = networking_v1_api.delete_namespaced_ingress(
                         name=ingress_name,
@@ -134,7 +136,12 @@ def delete():
                 logging.info(f"Status: {api_response.status}")
             except client.exceptions.ApiException as e:
                 logging.error(f"Error: {e} deleting secret!")
+    
+    for result in results:
+        if result.notebook_id in notebook_ids:
+            session.delete(result)
 
+    session.commit()
     session.close()
 
 
